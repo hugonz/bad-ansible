@@ -13,7 +13,7 @@
 #   Bare variables
 #   No use of handlers
 
-- name: configuration
+- name: Common configuration for site servers
   hosts: all
   gather_facts: false # remove later! speeds up testing
   become: true
@@ -26,11 +26,10 @@
 
 - name: deploy haproxy
   hosts: frontends
-  gather_facts: false # remove later! speeds up testing
   become: true
 
   tasks:
-  - name: http
+  - name: Install HAProxy support packages
     package:
       name: 
         - httpie
@@ -88,24 +87,14 @@
   become: true
   hosts: appdbs
   tasks:
-  - name: install progress
-    command: "yum install -y postgresql-server"
-
-  #- name: install postgres
-  #  yum:
-  #    name: postgresql-server
-  #    state: latest
-  - name: enable apache at boot
-    service:
-      name: postgresql
-      enabled: yes
-
-   # only run the next 2 tasks once!
-  - name: initilize postgres
+  - name: install postgres
+    yum:
+      name: postgresql-server
+      state: latest
+  - name: initialize Postgres
     command: postgresql-setup initdb
     args:
       creates: /var/lib/pgsql/data/
-
   - name: start postgres
     service:
       name: postgresql.service
@@ -116,7 +105,6 @@
   hosts: apps
   gather_facts: false
   become: true
-  hosts: apps
   tasks:
   - name: install apache
     yum:
@@ -125,8 +113,5 @@
   - name: enable apache at boot
     service:
       name: httpd
+      state: started
       enabled: yes
-#  - name: start apache
-#    service:
-#      name: httpd
-#      state: started
